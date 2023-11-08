@@ -195,6 +195,7 @@
     "exploitable": "Exploitable",
     "in_triage": "In Triage",
     "false_positive": "False Positive",
+    "test_state": "Test State",
     "not_affected": "Not Affected",
     "code_not_present": "Code not present",
     "code_not_reachable": "Code not reachable",

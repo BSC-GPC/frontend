@@ -330,6 +330,7 @@ import common from "../../../shared/common";
                     { value: 'IN_TRIAGE', text: this.$t('message.in_triage') },
                     { value: 'RESOLVED', text: this.$t('message.resolved') },
                     { value: 'FALSE_POSITIVE', text: this.$t('message.false_positive') },
+                    { value: 'TEST_STATE', text: this.$t('message.test_state') },
                     { value: 'NOT_AFFECTED', text: this.$t('message.not_affected') },
                   ],
                   justificationChoices: [

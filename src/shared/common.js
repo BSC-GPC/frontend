@@ -259,6 +259,7 @@ $common.makeAnalysisStateLabelFormatter = (i18n) => {
       case 'IN_TRIAGE':
       case 'FALSE_POSITIVE':
       case 'NOT_AFFECTED':
+      case 'TEST_STATE':
       case 'RESOLVED':
         return i18n.$t(`message.${value.toLowerCase()}`)
       default:
