@@ -91,7 +91,7 @@
       </b-tab>
     </b-tabs>
     <template v-slot:modal-footer="{ cancel }">
-      <b-button size="md" variant="outline-danger" @click="deleteProject()" v-permission="PERMISSIONS.PORTFOLIO_MANAGEMENT">{{ $t('message.delete') }}</b-button>
+      <b-button size="md" variant="outline-danger" v-b-modal.projectConfirmDeleteModal v-permission="PERMISSIONS.PORTFOLIO_MANAGEMENT">{{ $t('message.delete') }}</b-button>
       <b-button size="md" variant="outline-primary" v-b-modal.projectPropertiesModal v-permission="PERMISSIONS.PORTFOLIO_MANAGEMENT">{{ $t('message.properties') }}</b-button>
       <b-button size="md" variant="outline-primary" v-b-modal.projectAddVersionModal v-permission="PERMISSIONS.PORTFOLIO_MANAGEMENT">{{ $t('message.add_version') }}</b-button>
       <b-button size="md" variant="secondary" @click="cancel()">{{ $t('message.close') }}</b-button>

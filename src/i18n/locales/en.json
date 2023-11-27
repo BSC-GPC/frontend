@@ -95,6 +95,7 @@
     "add_version": "Add Version",
     "properties": "Properties",
     "delete": "Delete",
+    "confirm_delete": "Delete Confirmation",
     "project_properties": "Project Properties",
     "create_property": "Create Property",
     "value": "Value",

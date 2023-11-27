@@ -146,6 +146,7 @@
     <project-details-modal :project="cloneDeep(project)" :uuid="this.uuid" v-on:projectUpdated="syncProjectFields"/>
     <project-properties-modal :uuid="this.uuid" />
     <project-create-property-modal :uuid="this.uuid" />
+    <project-confirm-delete-modal :uuid="this.uuid" />
     <project-add-version-modal :uuid="this.uuid" />
   </div>
 </template>
@@ -166,6 +167,7 @@
   import ProjectDetailsModal from "./ProjectDetailsModal";
   import ProjectPropertiesModal from "./ProjectPropertiesModal";
   import ProjectCreatePropertyModal from "./ProjectCreatePropertyModal";
+  import ProjectConfirmDeleteModal from "./ProjectConfirmDeleteModal";
   import ProjectAddVersionModal from "./ProjectAddVersionModal";
   import ProjectFindings from "./ProjectFindings";
   import ProjectPolicyViolations from "./ProjectPolicyViolations";
@@ -180,6 +182,7 @@
       ProjectAddVersionModal,
       ProjectCreatePropertyModal,
       ProjectPropertiesModal,
+      ProjectConfirmDeleteModal,
       ProjectDetailsModal,
       ProjectComponents,
       ProjectDependencyGraph,
