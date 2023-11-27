@@ -20,8 +20,9 @@ COPY ./dist ${APP_DIR}
 # Ensure UID 101 & GID 0 own all the needed directories
 # Applying these changes allows the container to run via the OpenShift default SCC "Restricted" whereby arbitrary an UID and GID=0 are assigned
 RUN chown -R 101:0 ${APP_DIR} \
-    && chmod -R g=u ${APP_DIR} \
-    # add jq to easily manipulate config.json in entrypoint script
+    && chmod -R g=u ${APP_DIR}
+
+RUN sed -i 's/https/http/' /etc/apk/repositories \
     && apk --no-cache add jq
 
 # Specify the user to run as (in numeric format for compatibility with Kubernetes/OpenShift's SCC)
