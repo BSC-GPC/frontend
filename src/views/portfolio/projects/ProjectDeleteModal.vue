@@ -1,5 +1,5 @@
 <template>
-  <b-modal id="projectConfirmDeleteModal" size="md" hide-header-close no-stacking :title="$t('message.confirm_delete')">
+  <b-modal id="projectDeleteModal" size="md" hide-header-close no-stacking :title="$t('message.delete_confirmation')">
     <p>Are you sure you want to delete this project? This action cannot be undone.</p>
     <template v-slot:modal-footer="{ cancel }">
       <b-button size="md" variant="secondary" @click="cancel()">{{ $t('message.cancel') }}</b-button>
@@ -10,13 +10,13 @@
   
 <script>
   export default {
-    name: "ProjectConfirmDeleteModal",
+    name: "ProjectDeleteModal",
     props: {
       uuid: String
     },
     methods: {
       deleteProject: function() {
-        this.$root.$emit('bv::hide::modal', 'projectConfirmDeleteModal');
+        this.$root.$emit('bv::hide::modal', 'projectDeleteModal');
         let url = `${this.$api.BASE_URL}/${this.$api.URL_PROJECT}/` + this.uuid;
         this.axios.delete(url).then((response) => {
           this.$toastr.s(this.$t('message.project_deleted'));

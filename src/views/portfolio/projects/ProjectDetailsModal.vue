@@ -91,7 +91,7 @@
       </b-tab>
     </b-tabs>
     <template v-slot:modal-footer="{ cancel }">
-      <b-button size="md" variant="outline-danger" v-b-modal.projectConfirmDeleteModal v-permission="PERMISSIONS.PORTFOLIO_MANAGEMENT">{{ $t('message.delete') }}</b-button>
+      <b-button size="md" variant="outline-danger" v-b-modal.projectDeleteModal v-permission="PERMISSIONS.PORTFOLIO_MANAGEMENT">{{ $t('message.delete') }}</b-button>
       <b-button size="md" variant="outline-primary" v-b-modal.projectPropertiesModal v-permission="PERMISSIONS.PORTFOLIO_MANAGEMENT">{{ $t('message.properties') }}</b-button>
       <b-button size="md" variant="outline-primary" v-b-modal.projectAddVersionModal v-permission="PERMISSIONS.PORTFOLIO_MANAGEMENT">{{ $t('message.add_version') }}</b-button>
       <b-button size="md" variant="secondary" @click="cancel()">{{ $t('message.close') }}</b-button>
@@ -245,16 +245,6 @@
           this.$toastr.w(this.$t('condition.unsuccessful_action'));
         }).finally(() => {
           this.$root.$emit('bv::hide::modal', 'projectDetailsModal');
-        });
-      },
-      deleteProject: function() {
-        this.$root.$emit('bv::hide::modal', 'projectDetailsModal');
-        let url = `${this.$api.BASE_URL}/${this.$api.URL_PROJECT}/` + this.project.uuid;
-        this.axios.delete(url).then((response) => {
-          this.$toastr.s(this.$t('message.project_deleted'));
-          this.$router.replace({ name: "Projects" });
-        }).catch((error) => {
-          this.$toastr.w(this.$t('condition.unsuccessful_action'));
         });
       },
       hasActiveChild: function (project) {
