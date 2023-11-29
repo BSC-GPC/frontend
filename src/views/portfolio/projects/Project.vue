@@ -132,7 +132,7 @@
       </b-tab>
       <b-tab ref="findings" v-if="isPermitted(PERMISSIONS.VIEW_VULNERABILITY)" @click="routeTo('findings')">
         <template v-slot:title><i class="fa fa-tasks"></i> {{ $t('message.audit_vulnerabilities') }} <b-badge variant="tab-total">{{ totalFindings }}</b-badge></template>
-        <project-findings :key="this.uuid" :uuid="this.uuid" v-on:total="totalFindings = $event" />
+        <project-findings :key="this.uuid" :uuid="this.uuid" :name="project.name" :version="project.version" v-on:total="totalFindings = $event" />
       </b-tab>
       <b-tab ref="epss" v-if="isPermitted(PERMISSIONS.VIEW_VULNERABILITY)" @click="routeTo('epss')">
         <template v-slot:title><i class="fa fa-tasks"></i> {{ $t('message.exploit_predictions') }} <b-badge variant="tab-total">{{ totalEpss }}</b-badge></template>
@@ -146,6 +146,7 @@
     <project-details-modal :project="cloneDeep(project)" :uuid="this.uuid" v-on:projectUpdated="syncProjectFields"/>
     <project-properties-modal :uuid="this.uuid" />
     <project-create-property-modal :uuid="this.uuid" />
+    <project-delete-modal :uuid="this.uuid" />
     <project-add-version-modal :uuid="this.uuid" />
   </div>
 </template>
@@ -166,6 +167,7 @@
   import ProjectDetailsModal from "./ProjectDetailsModal";
   import ProjectPropertiesModal from "./ProjectPropertiesModal";
   import ProjectCreatePropertyModal from "./ProjectCreatePropertyModal";
+  import ProjectDeleteModal from "./ProjectDeleteModal";
   import ProjectAddVersionModal from "./ProjectAddVersionModal";
   import ProjectFindings from "./ProjectFindings";
   import ProjectPolicyViolations from "./ProjectPolicyViolations";
@@ -180,6 +182,7 @@
       ProjectAddVersionModal,
       ProjectCreatePropertyModal,
       ProjectPropertiesModal,
+      ProjectDeleteModal,
       ProjectDetailsModal,
       ProjectComponents,
       ProjectDependencyGraph,
