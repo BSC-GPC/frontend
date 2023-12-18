@@ -142,6 +142,10 @@
         <template v-slot:title><i class="fa fa-fire"></i> {{ $t('message.policy_violations') }} <b-badge variant="tab-total">{{ totalViolations }}</b-badge></template>
         <project-policy-violations :key="this.uuid" :uuid="this.uuid" v-on:total="totalViolations = $event" />
       </b-tab>
+      <b-tab ref="excelreports" v-if="isPermitted(PERMISSIONS.VIEW_VULNERABILITY)" @click="routeTo('excelReports')">
+        <template v-slot:title><i class="fa fa-fire"></i> {{ $t('message.excel_reports') }}</template>
+        <project-excel-reports :key="this.uuid" :uuid="this.uuid" :project="this.project"/>
+      </b-tab>
     </b-tabs>
     <project-details-modal :project="cloneDeep(project)" :uuid="this.uuid" v-on:projectUpdated="syncProjectFields"/>
     <project-properties-modal :uuid="this.uuid" />
@@ -172,6 +176,7 @@
   import ProjectFindings from "./ProjectFindings";
   import ProjectPolicyViolations from "./ProjectPolicyViolations";
   import ProjectEpss from "./ProjectEpss";
+  import ProjectExcelReports from "./ProjectExcelReports";
   import ExternalReferencesDropdown from "../../components/ExternalReferencesDropdown.vue";
 
   export default {
@@ -179,6 +184,7 @@
     components: {
       ProjectPolicyViolations,
       ProjectFindings,
+      ProjectExcelReports,
       ProjectAddVersionModal,
       ProjectCreatePropertyModal,
       ProjectPropertiesModal,

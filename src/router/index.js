@@ -107,7 +107,7 @@ function configRoutes() {
         {
           path: 'projects/:uuid',
           name: 'Project',
-          alias: ['projects/:uuid/overview', 'projects/:uuid/components', 'projects/:uuid/services', 'projects/:uuid/dependencyGraph', 'projects/:uuid/findings', 'projects/:uuid/epss', 'projects/:uuid/policyViolations'],
+          alias: ['projects/:uuid/overview', 'projects/:uuid/components', 'projects/:uuid/services', 'projects/:uuid/dependencyGraph', 'projects/:uuid/findings', 'projects/:uuid/epss', 'projects/:uuid/policyViolations', 'projects/:uuid/excelReports'],
           props: (route) => ( { uuid: route.params.uuid } ),
           component: Project,
           meta: {
