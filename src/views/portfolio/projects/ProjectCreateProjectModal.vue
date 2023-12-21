@@ -15,8 +15,8 @@
                                      v-model="project.classifier" :options="sortAvailableClassifiers"
                                      :label="$t('message.classifier')" :tooltip="$t('message.component_classifier_desc')" />
           <div style="margin-bottom: 1rem">
-            <label>Parent</label>
-            <multiselect v-model="selectedParent" id="multiselect" :custom-label="createProjectLabel" :placeholder="this.$t('message.search_parent')" open-direction="bottom" :options="availableParents"
+          <label>Parent</label>
+          <multiselect v-model="selectedParent" id="multiselect" :custom-label="createProjectLabel" :placeholder="this.$t('message.search_parent')" open-direction="bottom" :options="availableParents"
                        :multiple="false" :searchable="true" track-by="uuid" :loading="isLoading" @search-change="asyncFind" :internal-search="false" :close-on-select="true"
                        selectLabel="" deselectLabel="" ></multiselect>
           </div>
@@ -125,6 +125,11 @@
         tag: '', // The contents of a tag as its being typed into the vue-tag-input
         tags: [], // An array of tags bound to the vue-tag-input
         addOnKeys: [9, 13, 32, ':', ';', ','], // Separators used when typing tags into the vue-tag-input
+        labelIcon: {
+          dataOn: '\u2713',
+          dataOff: '\u2715'
+        },
+        isLoading: false
       }
     },
     beforeUpdate() {
