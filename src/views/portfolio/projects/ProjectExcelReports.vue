@@ -2,24 +2,24 @@
   <div>
     <div id="componentsToolbar">
       <div class="btn-spaced-group" role="form">
-        <b-dropdown variant="outline-primary" v-permission="PERMISSIONS.PORTFOLIO_MANAGEMENT">
-          <template #button-content>
-            <span class="fa fa-download"></span> {{ $t('message.download_sbom') }}
-          </template>
-          <b-dropdown-item @click="downloadSbom()" href="#">{{ $t('message.inventory') }}</b-dropdown-item>
-          <b-dropdown-item @click="downloadSbom()" href="#">{{ $t('message.inventory_with_vulnerabilities') }}</b-dropdown-item>
-        </b-dropdown>
+        <b-button id="download-sbom-button" size="md" variant="outline-primary"
+                @click="downloadSbom()"
+                v-permission:or="[PERMISSIONS.VIEW_VULNERABILITY, PERMISSIONS.VULNERABILITY_ANALYSIS]">
+          <span class="fa fa-download"></span> {{ $t('message.download_sbom') }}
+        </b-button>
         <b-button id="download-audit-trail-button" size="md" variant="outline-primary"
                 @click="downloadAuditTrail()"
                 v-permission:or="[PERMISSIONS.VIEW_VULNERABILITY, PERMISSIONS.VULNERABILITY_ANALYSIS]">
           <span class="fa fa-download"></span> {{ $t('message.download_audit_trail') }}
         </b-button>
-        <b-button id="download-dependency-tree-button" size="md" variant="outline-primary"
+        <!-- <b-button id="download-dependency-tree-button" size="md" variant="outline-primary"
                 @click="downloadDependencyTree()"
                 v-permission:or="[PERMISSIONS.VIEW_VULNERABILITY, PERMISSIONS.VULNERABILITY_ANALYSIS]">
           <span class="fa fa-download"></span> {{ $t('message.download_dependency_tree') }}
-        </b-button>
+        </b-button> -->
+        <div style="margin-top: 1rem">
         <b-card>
+
           <h3>Get Vulnerabilities Within a Date Range</h3>
           <b-input-group-form-datepicker id="vulnerability-created-input" input-group-size="mb-3" v-model="startDate"
                                          lazy="true" required="false" feedback="false" autofocus="false" placeholder="YYYY-MM-DD"
@@ -27,12 +27,13 @@
           <b-input-group-form-datepicker id="vulnerability-published_input" input-group-size="mb-3" v-model="endDate"
                                          lazy="true" required="false" feedback="false" autofocus="false" placeholder="YYYY-MM-DD"
                                          :label="$t('message.published')" :tooltip="this.$t('message.vulnerability_published_desc')"/>
-          <b-button id="download-pmvr-button" size="md" variant="outline-primary"
-              @click="downloadPMVR()"
+          <b-button id="download-vulnerabilities-in-range-button" size="md" variant="outline-primary"
+              @click="downloadVulnerabilitiesInRange()"
               v-permission:or="[PERMISSIONS.VIEW_VULNERABILITY, PERMISSIONS.VULNERABILITY_ANALYSIS]">
-            <span class="fa fa-download"></span> {{ $t('message.download_pmvr') }}
+            <span class="fa fa-download"></span> {{ $t('message.download_vulnerabilities_in_range') }}
           </b-button>
         </b-card>
+      </div>
       </div>
     </div>
   </div>
@@ -57,12 +58,13 @@ import BInputGroupFormDatepicker from "../../../forms/BInputGroupFormDatepicker"
     data() {
       return {
         startDate: "",
-        endDate: ""
+        endDate: "",
     }},
     mixins: [permissionsMixin],
     props: {
       uuid: String,
       project: Object,
+      tree: Array
     },
     methods: {
       initializeTooltips: function () {
@@ -114,21 +116,20 @@ import BInputGroupFormDatepicker from "../../../forms/BInputGroupFormDatepicker"
         this.downloadExcelBook(book, this.project.name, this.project.version || ""); 
       },
       downloadDependencyTree: async function () {
-        let dependencyTree = await this.getDependencyGraph();
-        console.log(dependencyTree)
+        await this.getDependencyGraph();
         let book = this.createExcelBook();
-        book = this.addExcelSheet(dependencyTree, book, "Dependency Tree");
+        book = this.addExcelSheet(this.tree, book, "Dependency Tree");
 
         // Download the Excel file
         this.downloadExcelBook(book, this.project.name, this.project.version || ""); 
       },
-      downloadPMVR: async function () {
+      downloadVulnerabilitiesInRange: async function () {
         let vulnerabilities = await this.getVulnerabilitiesInRange(this.startDate, this.endDate);
         console.log("first vulns: ", vulnerabilities)
-        let formattedVulnerabilities = this.formatPMVRVulnerabilities(vulnerabilities);
+        let formattedVulnerabilities = this.formatVulnerabilitiesInRange(vulnerabilities);
 
         let book = this.createExcelBook();
-        book = this.addExcelSheet(formattedVulnerabilities, book, "PMVR");
+        book = this.addExcelSheet(formattedVulnerabilities, book, "Vulnerabilities In Range");
 
         // Download the Excel file
         this.downloadExcelBook(book, this.project.name, this.project.version || ""); 
@@ -200,7 +201,7 @@ import BInputGroupFormDatepicker from "../../../forms/BInputGroupFormDatepicker"
           return vulnerabilitiesInRange;
         })
       },
-      formatPMVRVulnerabilities: function (vulnerabilities) {
+      formatVulnerabilitiesInRange: function (vulnerabilities) {
         let dataToExport = [["Date BSC Became Aware of Vulnerability", "Quarter \nNote: Optional but allows easily filtering", 
             "Analysis Owner \nNote: Optional but facilitates work on large teams", 
             "Product Affected \nNote: Optional but facilitates work when combined report used for related products or product families",
@@ -281,7 +282,6 @@ import BInputGroupFormDatepicker from "../../../forms/BInputGroupFormDatepicker"
           url: url,
           method: 'get'
         }).then((response) => {
-          console.log(response)
           // Get all components and their dependencies
           let components = response.data.components;
           let dependencies = response.data.dependencies;
@@ -298,24 +298,22 @@ import BInputGroupFormDatepicker from "../../../forms/BInputGroupFormDatepicker"
             mapDependencies.set(dependencies[i].ref, dependencies[i].dependsOn);
           }
 
-          let dependencyTree = [];
+          this.tree = []
 
           // Create tree structure of the project's dependencies
           for(let i = 1; i < dependencies.length; i++){
             let path = [];
             path.push(mapNames.get(dependencies[i].ref));
-            this.getDeps(path, dependencies[i].dependsOn, mapDependencies, mapNames, dependencyTree);
+            this.getDeps(path, dependencies[i].dependsOn, mapDependencies, mapNames);
           }
-          console.log(dependencyTree)
-          return dependencyTree
         })
       },
       // Recursively loop through project dependencies and add them to the tree
-     getDeps: function (path, dependencies, mapDependencies, mapNames, dependencyTree) {
-        // Fix global dependencyTree var ???
+     getDeps: function (path, dependencies, mapDependencies, mapNames) {
+        // Global var not working correctly ???
         // Base case: no dependencies for this component
         if(dependencies.length == 0){
-          dependencyTree.push(path);
+          this.tree.push(path);
           return;
         }
 
@@ -327,7 +325,7 @@ import BInputGroupFormDatepicker from "../../../forms/BInputGroupFormDatepicker"
           nextPath.push(mapNames.get(dependencies[i]));
 
           // Get dependencies of this dependency
-          this.getDeps(nextPath, mapDependencies.get(dependencies[i]), mapDependencies, mapNames, dependencyTree);
+          this.getDeps(nextPath, mapDependencies.get(dependencies[i]), mapDependencies, mapNames);
         }
       },
       // Create a new excel workbook

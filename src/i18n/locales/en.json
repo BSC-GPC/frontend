@@ -228,7 +228,7 @@
     "download_sbom": "Download SBOM",
     "download_audit_trail": "Download Audit Trail",
     "download_dependency_tree": "Download Dependency Tree",
-    "download_pmvr": "Download Post Market Vulnerability Review Template",
+    "download_vulnerabilities_in_range": "Download Vulnerabilities In Range",
     "download": "Download",
     "inventory": "Inventory",
     "inventory_with_vulnerabilities": "Inventory with Vulnerabilities",
