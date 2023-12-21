@@ -14,9 +14,18 @@
           <b-input-group-form-select id="v-classifier-input" required="true"
                                      v-model="project.classifier" :options="sortAvailableClassifiers"
                                      :label="$t('message.classifier')" :tooltip="$t('message.component_classifier_desc')" />
+          <div id="teams-table" class="hide" style="margin-bottom: 1rem">
+            <label>Team Access</label>
+            <bootstrap-table required="true"
+              ref="table"
+              :columns="columns"
+              :data="data"
+              :options="options">
+            </bootstrap-table>
+          </div>
           <div style="margin-bottom: 1rem">
-          <label>Parent</label>
-          <multiselect v-model="selectedParent" id="multiselect" :custom-label="createProjectLabel" :placeholder="this.$t('message.search_parent')" open-direction="bottom" :options="availableParents"
+            <label>Parent</label>
+            <multiselect v-model="selectedParent" id="multiselect" :custom-label="createProjectLabel" :placeholder="this.$t('message.search_parent')" open-direction="bottom" :options="availableParents"
                        :multiple="false" :searchable="true" track-by="uuid" :loading="isLoading" @search-change="asyncFind" :internal-search="false" :close-on-select="true"
                        selectLabel="" deselectLabel="" ></multiselect>
           </div>
@@ -92,6 +101,8 @@
   import { Switch as cSwitch } from '@coreui/vue';
   import permissionsMixin from "../../../mixins/permissionsMixin";
   import Multiselect from "vue-multiselect"
+  import xssFilters from "xss-filters";
+  import common from "../../../shared/common";
 
   export default {
     name: "ProjectCreateProjectModal",
@@ -129,7 +140,34 @@
           dataOn: '\u2713',
           dataOff: '\u2715'
         },
-        isLoading: false
+        isLoading: false,
+        columns: [
+          {
+            field: "state",
+            checkbox: true,
+            align: "center",
+            required: true
+          },
+          {
+            title: this.$t('admin.team_name'),
+            field: "name",
+            sortable: true,
+            formatter(value, row, index) {
+              return xssFilters.inHTMLData(common.valueWithDefault(value, ""));
+            }
+          }
+        ],
+        data: [],
+        options: {
+          responseHandler: function (res, xhr) {
+            res.total = xhr.getResponseHeader("X-Total-Count");
+            if(res.teams.length > 1){
+              document.getElementById("teams-table").classList.remove("hide")
+            }
+            return res.teams;
+          },
+          url: `${this.$api.BASE_URL}/${this.$api.URL_USER_SELF}`
+        }
       }
     },
     beforeUpdate() {
@@ -182,8 +220,9 @@
           copyright: this.project.copyright,
           tags: tagsNode,
           active: true
-        }).then((response) => {
+        }).then(async (response) => {
           this.$emit('refreshTable');
+          await this.addTeamSelections(this.$refs.table.getSelections(), response.data.uuid);
           this.$toastr.s(this.$t('message.project_created'));
           this.selectedParent = null;
           this.availableParents = [{ value: null, text: ''}]
@@ -192,6 +231,25 @@
         }).finally(() => {
           this.$root.$emit('bv::hide::modal', 'projectCreateProjectModal');
         });
+      },
+      addTeamSelections: function(selections, projectUUID) {
+        // Check if there is only one team to add to
+        if(selections.length == 0){
+          let data = this.$refs.table.getData();
+          if(data.length == 1){
+            selections = [data[0]];
+          }
+        }
+        // Let all of the selected teams have access to this project
+        for (let i = 0; i < selections.length; i++) {
+          let url = `${this.$api.BASE_URL}/${this.$api.URL_ACL_MAPPING}`;
+          this.axios.put(url, {
+            team: selections[i].uuid,
+            project: projectUUID
+          }).catch((error) => {
+            this.$toastr.w(this.$t('condition.unsuccessful_action'));
+          });
+        }
       },
       retrieveLicenses: function() {
         return new Promise(resolve => {
@@ -258,5 +316,9 @@
   border:0;
   padding:0;
   margin-bottom:0;
+}
+
+.hide {
+  display: none;
 }
 </style>
