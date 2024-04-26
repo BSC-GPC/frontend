@@ -227,6 +227,7 @@
     "download_bom": "Download BOM",
     "download_sbom": "Download SBOM",
     "download_audit_trail": "Download Audit Trail",
+    "download_kev_report": "Download KEV Report",
     "download_dependency_tree": "Download Dependency Tree",
     "download_vulnerabilities_in_range": "Download Vulnerabilities In Range",
     "download": "Download",

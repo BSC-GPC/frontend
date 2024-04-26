@@ -12,6 +12,11 @@
                 v-permission:or="[PERMISSIONS.VIEW_VULNERABILITY, PERMISSIONS.VULNERABILITY_ANALYSIS]">
           <span class="fa fa-download"></span> {{ $t('message.download_audit_trail') }}
         </b-button>
+        <b-button id="download-kev-report-button" size="md" variant="outline-primary"
+                @click="downloadKevReport()"
+                v-permission:or="[PERMISSIONS.VIEW_VULNERABILITY, PERMISSIONS.VULNERABILITY_ANALYSIS]">
+          <span class="fa fa-download"></span> {{ $t('message.download_kev_report') }}
+        </b-button>
         <!-- <b-button id="download-dependency-tree-button" size="md" variant="outline-primary"
                 @click="downloadDependencyTree()"
                 v-permission:or="[PERMISSIONS.VIEW_VULNERABILITY, PERMISSIONS.VULNERABILITY_ANALYSIS]">
@@ -104,7 +109,7 @@ import BInputGroupFormDatepicker from "../../../forms/BInputGroupFormDatepicker"
         book = this.addExcelSheet(vulnerabilities, book, "SBOM Vulnerabilities");
 
         // Download the Excel file
-        this.downloadExcelBook(book, this.project.name, this.project.version || ""); 
+        this.downloadExcelBook(book, this.project.name, this.project.version || "", "SBOM"); 
       },
       downloadAuditTrail: async function () {
         let auditTrail = await this.getAllAuditTrails();
@@ -113,7 +118,16 @@ import BInputGroupFormDatepicker from "../../../forms/BInputGroupFormDatepicker"
         book = this.addExcelSheet(auditTrail, book, "Audit Trail");
 
         // Download the Excel file
-        this.downloadExcelBook(book, this.project.name, this.project.version || ""); 
+        this.downloadExcelBook(book, this.project.name, this.project.version || "", "Audit Trail"); 
+      },
+      downloadKevReport: async function () {
+        let kevVulnerabilities = await this.getAllVulnerabilitiesInKev();
+
+        // let book = this.createExcelBook();
+        // book = this.addExcelSheet(auditTrail, book, "Audit Trail");
+
+        // // Download the Excel file
+        // this.downloadExcelBook(book, this.project.name, this.project.version || "", "KEV"); 
       },
       downloadDependencyTree: async function () {
         await this.getDependencyGraph();
@@ -121,7 +135,7 @@ import BInputGroupFormDatepicker from "../../../forms/BInputGroupFormDatepicker"
         book = this.addExcelSheet(this.tree, book, "Dependency Tree");
 
         // Download the Excel file
-        this.downloadExcelBook(book, this.project.name, this.project.version || ""); 
+        this.downloadExcelBook(book, this.project.name, this.project.version || "", "Dependency Tree"); 
       },
       downloadVulnerabilitiesInRange: async function () {
         let vulnerabilities = await this.getVulnerabilitiesInRange(this.startDate, this.endDate);
@@ -132,7 +146,7 @@ import BInputGroupFormDatepicker from "../../../forms/BInputGroupFormDatepicker"
         book = this.addExcelSheet(formattedVulnerabilities, book, "Vulnerabilities In Range");
 
         // Download the Excel file
-        this.downloadExcelBook(book, this.project.name, this.project.version || ""); 
+        this.downloadExcelBook(book, this.project.name, this.project.version || "", "Vulnerabilities in Range"); 
       },
       getComponents: async function () {
         let url = `${this.$api.BASE_URL}/${this.$api.URL_COMPONENT}/project/${this.uuid}`;
@@ -254,6 +268,30 @@ import BInputGroupFormDatepicker from "../../../forms/BInputGroupFormDatepicker"
         }
         return dataToExport
       },
+      // Get ???
+      getAllVulnerabilitiesInKev: async function () {
+        cisaUrl = 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json'
+
+        return this.axios.request({
+          url: cisaUrl,
+          method: 'get'
+        }).then((response) => {
+          let vulnerabilities = response.data;
+          console.log(vulnerabilities)
+        })
+
+
+
+        // // url = $api_base_url + "/api/v1/vulnerability/source/NVD/vuln/" + $vulnerability.cveID + "/projects"
+        // let url = `${this.$api.BASE_URL}/${this.$api.URL_VULNERABILITY}/source/NVD/vuln/${this.uuid}/projects`;
+
+
+        // // The data to export to excel - contains the audit trail of each vulnerability
+        // let dataToExport = [["Vulnerability ID", "Component Name", "Component Version", "Analysis State", 
+        //                     "Analysis Justification", "Analysis Response", "Analysis Details", 
+        //                     "Analysis Comments - History", "Is Suppressed?"]];
+
+      },
       // Return all findings for a specific project (for audit trail information)
       getFindings: function () {
         let url = `${this.$api.BASE_URL}/${this.$api.URL_FINDING}/project/${this.uuid}`;
@@ -340,8 +378,8 @@ import BInputGroupFormDatepicker from "../../../forms/BInputGroupFormDatepicker"
         return book;
       },
       // Download an excel workbook
-      downloadExcelBook: function (book, projectName, projectVersion) {
-        XLSX.writeFile(book, projectName+" "+projectVersion+".xlsx");
+      downloadExcelBook: function (book, projectName, projectVersion, reportType) {
+        XLSX.writeFile(book, projectName+" "+projectVersion+" "+reportType+".xlsx");
       },
       // Export data to excel - Ref: https://gist.github.com/code-boxx/6d08ac71c821b7c7e715043af95f972f
       exportToExcel: function (data) {
