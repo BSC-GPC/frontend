@@ -54,8 +54,7 @@ import common from "../../../shared/common";
 import * as XLSX from 'xlsx';
 import BInputGroupFormDatepicker from "../../../forms/BInputGroupFormDatepicker";
 
-
-  export default {
+export default {
     components: {
       cSwitch,
       BInputGroupFormDatepicker
@@ -77,83 +76,67 @@ import BInputGroupFormDatepicker from "../../../forms/BInputGroupFormDatepicker"
           trigger: "hover"
         });
       },
-      downloadBom: function (data) {
-        let url = `${this.$api.BASE_URL}/${this.$api.URL_BOM}/cyclonedx/project/${this.uuid}`;
-        this.axios.request({
-          responseType: 'blob',
-          url: url,
-          method: 'get',
-          params: {
-            format: 'json',
-            variant: data,
-            download: 'true'
-          }
-        }).then((response) => {
-          const url = window.URL.createObjectURL(new Blob([response.data]));
-          const link = document.createElement('a');
-          link.href = url;
-          let filename = this.project.name + "-" + this.project.version + "-bom.json";
-          link.setAttribute('download', filename);
-          document.body.appendChild(link);
-          link.click();
-        });
-      },
+      
+      // Download this project's SBOM in excel format
       downloadSbom: async function () {
-        // Get the SBOM components and vulnerabilities
         let components = await this.getComponents();
         let vulnerabilities = await this.getVulnerabilities();
 
-        // Add the components and vulnerabilties to Excel sheets
         let book = this.createExcelBook();
         book = this.addExcelSheet(components, book, "SBOM Components");
         book = this.addExcelSheet(vulnerabilities, book, "SBOM Vulnerabilities");
 
-        // Download the Excel file
         this.downloadExcelBook(book, this.project.name, this.project.version || "", "SBOM"); 
       },
+
+      // Download this project's audit trail in excel format
       downloadAuditTrail: async function () {
         let auditTrail = await this.getAllAuditTrails();
 
         let book = this.createExcelBook();
         book = this.addExcelSheet(auditTrail, book, "Audit Trail");
 
-        // Download the Excel file
         this.downloadExcelBook(book, this.project.name, this.project.version || "", "Audit Trail"); 
       },
+
+      // Download this project's KEV report in excel format
       downloadKevReport: async function () {
-        let kevVulnerabilities = await this.getAllVulnerabilitiesInKev();
+        let kevReport = await this.getVulnerabilitiesInKev();
 
-        // let book = this.createExcelBook();
-        // book = this.addExcelSheet(auditTrail, book, "Audit Trail");
+        let book = this.createExcelBook();
+        book = this.addExcelSheet(kevReport, book, "KEV Report");
 
-        // // Download the Excel file
-        // this.downloadExcelBook(book, this.project.name, this.project.version || "", "KEV"); 
+        this.downloadExcelBook(book, this.project.name, this.project.version || "", "KEV"); 
       },
+
+      // Download this project's dependency tree in excel format (NOTE: STILL IN DEVELOPMENT)
       downloadDependencyTree: async function () {
         await this.getDependencyGraph();
         let book = this.createExcelBook();
         book = this.addExcelSheet(this.tree, book, "Dependency Tree");
 
-        // Download the Excel file
         this.downloadExcelBook(book, this.project.name, this.project.version || "", "Dependency Tree"); 
       },
+
+      // Download this project's vulnerabilities within a date range in excel format
       downloadVulnerabilitiesInRange: async function () {
         let vulnerabilities = await this.getVulnerabilitiesInRange(this.startDate, this.endDate);
-        console.log("first vulns: ", vulnerabilities)
         let formattedVulnerabilities = this.formatVulnerabilitiesInRange(vulnerabilities);
 
         let book = this.createExcelBook();
         book = this.addExcelSheet(formattedVulnerabilities, book, "Vulnerabilities In Range");
 
-        // Download the Excel file
         this.downloadExcelBook(book, this.project.name, this.project.version || "", "Vulnerabilities in Range"); 
       },
+
+      // Return this project's SBOM components in excel format
       getComponents: async function () {
         let url = `${this.$api.BASE_URL}/${this.$api.URL_COMPONENT}/project/${this.uuid}`;
         return this.axios.request({
           url: url,
           method: 'get'
         }).then((response) => {
+          // Excel Format
           let componentData = [["Component Name", "Component Version", "Classifier", "CPE", "PURL", "License Name", "SPDX License ID", 
               "License Group", "Total # of Vulnerabilities", "# of Low Vulnerabilities", "# of Medium Vulnerabilities", 
               "# of High Vulnerabilities", "# of Critical Vulnerabilities"]];
@@ -174,20 +157,22 @@ import BInputGroupFormDatepicker from "../../../forms/BInputGroupFormDatepicker"
           return componentData;
         })
       },
+
+      // Return this project's SBOM vulnerabilities in excel format
       getVulnerabilities: function () {
         let url = `${this.$api.BASE_URL}/${this.$api.URL_VULNERABILITY}/project/${this.uuid}`;
         return this.axios.request({
           url: url,
           method: 'get'
         }).then((response) => {
-          // Format SBOM vulnerabilities for Excel
+          // Excel Format
           let vulnerabilityData = [["Vulnerability ID", "Source", "Component with Vulnerability", "Severity Level", "Description", 
               "CVSS V3 Vector", "CVSS V3 Base Score", "CVSS V2 Base Score", "EPSS Score", "Date Published", "Date Updated"
           ]];
 
           let vulnerabilities = response.data;
 
-          // Loop through all SBOM vulnerabilities
+          // Loop through all SBOM vulnerabilities and format them
           for(let i = 0; i < vulnerabilities.length; i++) {
             vulnerabilityData.push([vulnerabilities[i].vulnId, vulnerabilities[i].source, vulnerabilities[i].components[0].name, 
                 vulnerabilities[i].severity, vulnerabilities[i].description, vulnerabilities[i].cvssV3Vector, vulnerabilities[i].cvssV3BaseScore, 
@@ -197,6 +182,8 @@ import BInputGroupFormDatepicker from "../../../forms/BInputGroupFormDatepicker"
           return vulnerabilityData;
         })        
       },
+
+      // Return this project's vulnerabilties within a date range
       getVulnerabilitiesInRange: function (startDate, endDate) {
         let url = `${this.$api.BASE_URL}/${this.$api.URL_VULNERABILITY}/project/${this.uuid}`;        
         return this.axios.request({
@@ -215,6 +202,8 @@ import BInputGroupFormDatepicker from "../../../forms/BInputGroupFormDatepicker"
           return vulnerabilitiesInRange;
         })
       },
+
+      // Return vulnerabilities within range in excel format
       formatVulnerabilitiesInRange: function (vulnerabilities) {
         let dataToExport = [["Date BSC Became Aware of Vulnerability", "Quarter \nNote: Optional but allows easily filtering", 
             "Analysis Owner \nNote: Optional but facilitates work on large teams", 
@@ -232,6 +221,7 @@ import BInputGroupFormDatepicker from "../../../forms/BInputGroupFormDatepicker"
         }
         return dataToExport;
       },
+
       // Return audit trail for a specific vulnerability
       getAuditTrail: async function (compUUID, vulnUUID) { // for a specific vuln, in a specific component, in a specific project
         let url = `${this.$api.BASE_URL}/${this.$api.URL_ANALYSIS}?project=${this.uuid}&component=${compUUID}&vulnerability=${vulnUUID}`;
@@ -240,7 +230,8 @@ import BInputGroupFormDatepicker from "../../../forms/BInputGroupFormDatepicker"
           method: 'get'
         });
       },
-      // Get audit trail of all vulnerabilities in a project
+
+      // Return project's audit trail of all vulnerabilities in excel format
       getAllAuditTrails: async function () {
         let vulnerabilities = (await this.getFindings()).data;
 
@@ -266,32 +257,66 @@ import BInputGroupFormDatepicker from "../../../forms/BInputGroupFormDatepicker"
                       auditDetails.analysisDetails, parsedComments, auditDetails.isSuppressed];
           dataToExport.push(dataRow);
         }
-        return dataToExport
+        return dataToExport;
       },
-      // Get ???
-      getAllVulnerabilitiesInKev: async function () {
-        cisaUrl = 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json'
 
+      // Return whether this project is affected by a specific vulnerability
+      projectAffectedByVulnerability: async function (vulnUUID) {
+        let url = `${this.$api.BASE_URL}/${this.$api.URL_VULNERABILITY}/source/NVD/vuln/${vulnUUID}/projects`;
         return this.axios.request({
-          url: cisaUrl,
+          url: url,
           method: 'get'
         }).then((response) => {
-          let vulnerabilities = response.data;
-          console.log(vulnerabilities)
-        })
+          let projects = response.data;
 
-
-
-        // // url = $api_base_url + "/api/v1/vulnerability/source/NVD/vuln/" + $vulnerability.cveID + "/projects"
-        // let url = `${this.$api.BASE_URL}/${this.$api.URL_VULNERABILITY}/source/NVD/vuln/${this.uuid}/projects`;
-
-
-        // // The data to export to excel - contains the audit trail of each vulnerability
-        // let dataToExport = [["Vulnerability ID", "Component Name", "Component Version", "Analysis State", 
-        //                     "Analysis Justification", "Analysis Response", "Analysis Details", 
-        //                     "Analysis Comments - History", "Is Suppressed?"]];
-
+          // Loop through the projects affected by this vulnerability & see if any match this project
+          for(let i = 0; i < projects.length; i++) {
+            if(this.uuid == projects[i].uuid){
+              return true;
+            }
+          }
+          return false;
+        });
       },
+
+      // Return the KEV catalog (CISA)
+      getKevCatalog: async function () {
+        // FIX ???
+        let cisaUrl = 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json';
+        let dogUrl = 'https://dogapi.dog/api/facts';
+        let workingUrl = "http://localhost:3000/kev";
+        let testUrl = `${this.$api.BASE_URL}/kev`
+
+        return this.axios.request({
+          url: workingUrl,
+          method: 'get'
+        });
+      },
+      
+      // Return project's KEV vulnerabilities in excel format
+      getVulnerabilitiesInKev: async function () {
+        let vulnerabilities = (await this.getKevCatalog()).data.vulnerabilities;
+
+        // Excel format
+        let dataToExport = [["CVE ID", "Vulnerability Name", "Vendor Project", "Product", 
+                            "Description", "Required Action", "Known Ransomeware Campaign Use", 
+                            "Date Added", "Due Date", "Notes"]];
+
+        // Loop through each vulnerability in the KEV catalog & check if it affects this project
+        for(let i = 0; i < vulnerabilities.length; i++){ 
+          let affected = await this.projectAffectedByVulnerability(vulnerabilities[i].cveID);
+          if(affected){
+            // Create excel row of data with KEV info
+            let dataRow = [vulnerabilities[i].cveID, vulnerabilities[i].vulnerabilityName, vulnerabilities[i].vendorProject,
+                          vulnerabilities[i].product, vulnerabilities[i].shortDescription, vulnerabilities[i].requiredAction,
+                          vulnerabilities[i].knownRansomwareCampaignUse, vulnerabilities[i].dateAdded, 
+                          vulnerabilities[i].dueDate, vulnerabilities[i].notes];
+            dataToExport.push(dataRow);
+          }
+        }
+        return dataToExport;
+      },
+
       // Return all findings for a specific project (for audit trail information)
       getFindings: function () {
         let url = `${this.$api.BASE_URL}/${this.$api.URL_FINDING}/project/${this.uuid}`;
@@ -300,6 +325,7 @@ import BInputGroupFormDatepicker from "../../../forms/BInputGroupFormDatepicker"
           method: 'get'
         })
       },
+
       // Parse the comments array in a vulnerability's audit trail 
       parseComments: function (comments){
         let parsedComments = "";
@@ -313,6 +339,7 @@ import BInputGroupFormDatepicker from "../../../forms/BInputGroupFormDatepicker"
         console.log("parser com: ", parsedComments)
         return parsedComments;
       },
+
       // Get the entire dependency tree/graph for a project
       getDependencyGraph: async function () {
         let url = `${this.$api.BASE_URL}/${this.$api.URL_BOM}/cyclonedx/project/${this.uuid}`;
@@ -346,6 +373,7 @@ import BInputGroupFormDatepicker from "../../../forms/BInputGroupFormDatepicker"
           }
         })
       },
+
       // Recursively loop through project dependencies and add them to the tree
      getDeps: function (path, dependencies, mapDependencies, mapNames) {
         // Global var not working correctly ???
@@ -366,10 +394,12 @@ import BInputGroupFormDatepicker from "../../../forms/BInputGroupFormDatepicker"
           this.getDeps(nextPath, mapDependencies.get(dependencies[i]), mapDependencies, mapNames);
         }
       },
+
       // Create a new excel workbook
       createExcelBook: function() {
         return XLSX.utils.book_new();
       },
+
       // Add a new excel sheet to an existing workbook
       addExcelSheet: function (data, book, sheetName) {
         let sheet = XLSX.utils.aoa_to_sheet(data);
@@ -377,20 +407,10 @@ import BInputGroupFormDatepicker from "../../../forms/BInputGroupFormDatepicker"
         book.Sheets[sheetName] = sheet;
         return book;
       },
+
       // Download an excel workbook
       downloadExcelBook: function (book, projectName, projectVersion, reportType) {
         XLSX.writeFile(book, projectName+" "+projectVersion+" "+reportType+".xlsx");
-      },
-      // Export data to excel - Ref: https://gist.github.com/code-boxx/6d08ac71c821b7c7e715043af95f972f
-      exportToExcel: function (data) {
-        // Make a new excel file
-        let book = XLSX.utils.book_new();
-        let sheet = XLSX.utils.aoa_to_sheet(data);
-        book.SheetNames.push("First");
-        book.Sheets["First"] = sheet;
-
-        // Download excel file
-        XLSX.writeFile(book, "projectName"+" "+"projectVersion"+".xlsx");
       }
     },
   };
