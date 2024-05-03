@@ -8,7 +8,14 @@ module.exports = {
   // Relative paths cannot be supported. Research by @nscur0 - https://owasp.slack.com/archives/CTC03GX9S/p1608400149085400
   publicPath: "/",
   devServer: {
-    proxy: { "/api": { target: "http://localhost:8080" } }
+    proxy: {
+      '/api': {
+        target: "http://localhost:8080"
+      },
+      '/kev': { // For nginx proxy
+        target: "http://localhost:80",
+      }
+    }
   },
   configureWebpack: {
     plugins: [

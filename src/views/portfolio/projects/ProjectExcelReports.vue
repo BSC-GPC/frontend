@@ -285,10 +285,10 @@ export default {
         let cisaUrl = 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json';
         let dogUrl = 'https://dogapi.dog/api/facts';
         let workingUrl = "http://localhost:3000/kev";
-        let testUrl = `${this.$api.BASE_URL}/kev`
+        let testUrl = `${this.$api.BASE_URL}/kev`;
 
         return this.axios.request({
-          url: workingUrl,
+          url: testUrl,
           method: 'get'
         });
       },
