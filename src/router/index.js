@@ -146,6 +146,7 @@ function configRoutes() {
             'projects/:uuid/findings',
             'projects/:uuid/epss',
             'projects/:uuid/policyViolations',
+            'projects/:uuid/excelReports',
           ],
           props: (route) => ({ uuid: route.params.uuid }),
           component: Project,
