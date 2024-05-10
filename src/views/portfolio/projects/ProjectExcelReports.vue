@@ -110,13 +110,13 @@ export default {
       },
 
       // Download this project's dependency tree in excel format (NOTE: STILL IN DEVELOPMENT)
-      downloadDependencyTree: async function () {
-        await this.getDependencyGraph();
-        let book = this.createExcelBook();
-        book = this.addExcelSheet(this.tree, book, "Dependency Tree");
+      // downloadDependencyTree: async function () {
+      //   await this.getDependencyGraph();
+      //   let book = this.createExcelBook();
+      //   book = this.addExcelSheet(this.tree, book, "Dependency Tree");
 
-        this.downloadExcelBook(book, this.project.name, this.project.version || "", "Dependency Tree"); 
-      },
+      //   this.downloadExcelBook(book, this.project.name, this.project.version || "", "Dependency Tree"); 
+      // },
 
       // Download this project's vulnerabilities within a date range in excel format
       downloadVulnerabilitiesInRange: async function () {
@@ -155,7 +155,7 @@ export default {
             ]);
           }
           return componentData;
-        })
+        });
       },
 
       // Return this project's SBOM vulnerabilities in excel format
@@ -180,7 +180,7 @@ export default {
             ]);
           }
           return vulnerabilityData;
-        })        
+        });        
       },
 
       // Return this project's vulnerabilties within a date range
@@ -200,10 +200,10 @@ export default {
             }
           }
           return vulnerabilitiesInRange;
-        })
+        });
       },
 
-      // Return vulnerabilities within range in excel format
+      // Return formatted vulnerabilities within range 
       formatVulnerabilitiesInRange: function (vulnerabilities) {
         let dataToExport = [["Date BSC Became Aware of Vulnerability", "Quarter \nNote: Optional but allows easily filtering", 
             "Analysis Owner \nNote: Optional but facilitates work on large teams", 
@@ -222,8 +222,8 @@ export default {
         return dataToExport;
       },
 
-      // Return audit trail for a specific vulnerability
-      getAuditTrail: async function (compUUID, vulnUUID) { // for a specific vuln, in a specific component, in a specific project
+      // Return audit trail for a specific vulnerability (in a specific component & project)
+      getAuditTrail: async function (compUUID, vulnUUID) { 
         let url = `${this.$api.BASE_URL}/${this.$api.URL_ANALYSIS}?project=${this.uuid}&component=${compUUID}&vulnerability=${vulnUUID}`;
         return this.axios.request({
           url: url,
@@ -281,14 +281,9 @@ export default {
 
       // Return the KEV catalog (CISA)
       getKevCatalog: async function () {
-        // FIX ???
-        let cisaUrl = 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json';
-        let dogUrl = 'https://dogapi.dog/api/facts';
-        let workingUrl = "http://localhost:3000/kev";
-        let testUrl = `${this.$api.BASE_URL}/kev`;
-
+        let url = `${this.$api.BASE_URL}/kev`; // reverse proxy
         return this.axios.request({
-          url: testUrl,
+          url: url,
           method: 'get'
         });
       },
@@ -305,8 +300,9 @@ export default {
         // Loop through each vulnerability in the KEV catalog & check if it affects this project
         for(let i = 0; i < vulnerabilities.length; i++){ 
           let affected = await this.projectAffectedByVulnerability(vulnerabilities[i].cveID);
+          
+          // If the KEV vulnerability affects this project, create excel row of data with KEV info
           if(affected){
-            // Create excel row of data with KEV info
             let dataRow = [vulnerabilities[i].cveID, vulnerabilities[i].vulnerabilityName, vulnerabilities[i].vendorProject,
                           vulnerabilities[i].product, vulnerabilities[i].shortDescription, vulnerabilities[i].requiredAction,
                           vulnerabilities[i].knownRansomwareCampaignUse, vulnerabilities[i].dateAdded, 
@@ -323,77 +319,76 @@ export default {
         return this.axios.request({
           url: url,
           method: 'get'
-        })
+        });
       },
 
-      // Parse the comments array in a vulnerability's audit trail 
+      // Return parsed audit trail comments
       parseComments: function (comments){
         let parsedComments = "";
+
         // Reformat the comments if there are any
-        console.log(comments)
         if(comments !== undefined){
             for(let i = 0; i < comments.length; i++){
-                parsedComments += comments[i].commenter + ": " + comments[i].comment + "   \n"
+                parsedComments += comments[i].commenter + ": " + comments[i].comment + "   \n";
             }
         }
-        console.log("parser com: ", parsedComments)
         return parsedComments;
       },
 
-      // Get the entire dependency tree/graph for a project
-      getDependencyGraph: async function () {
-        let url = `${this.$api.BASE_URL}/${this.$api.URL_BOM}/cyclonedx/project/${this.uuid}`;
-        return this.axios.request({
-          url: url,
-          method: 'get'
-        }).then((response) => {
-          // Get all components and their dependencies
-          let components = response.data.components;
-          let dependencies = response.data.dependencies;
+      // Get the entire dependency tree/graph for a project (NOTE: STILL IN DEVELOPMENT)
+      // getDependencyGraph: async function () {
+      //   let url = `${this.$api.BASE_URL}/${this.$api.URL_BOM}/cyclonedx/project/${this.uuid}`;
+      //   return this.axios.request({
+      //     url: url,
+      //     method: 'get'
+      //   }).then((response) => {
+      //     // Get all components and their dependencies
+      //     let components = response.data.components;
+      //     let dependencies = response.data.dependencies;
 
-          // Map each component's ref id to its names
-          let mapNames = new Map();
-          for(let i = 0; i < components.length; i++){        
-            mapNames.set(components[i]["bom-ref"], components[i].name);
-          }
+      //     // Map each component's ref id to its names
+      //     let mapNames = new Map();
+      //     for(let i = 0; i < components.length; i++){        
+      //       mapNames.set(components[i]["bom-ref"], components[i].name);
+      //     }
 
-          // Map each component's ref id to its dependencies
-          let mapDependencies = new Map();
-          for(let i = 1; i < dependencies.length; i++){
-            mapDependencies.set(dependencies[i].ref, dependencies[i].dependsOn);
-          }
+      //     // Map each component's ref id to its dependencies
+      //     let mapDependencies = new Map();
+      //     for(let i = 1; i < dependencies.length; i++){
+      //       mapDependencies.set(dependencies[i].ref, dependencies[i].dependsOn);
+      //     }
 
-          this.tree = []
+      //     this.tree = []
 
-          // Create tree structure of the project's dependencies
-          for(let i = 1; i < dependencies.length; i++){
-            let path = [];
-            path.push(mapNames.get(dependencies[i].ref));
-            this.getDeps(path, dependencies[i].dependsOn, mapDependencies, mapNames);
-          }
-        })
-      },
+      //     // Create tree structure of the project's dependencies
+      //     for(let i = 1; i < dependencies.length; i++){
+      //       let path = [];
+      //       path.push(mapNames.get(dependencies[i].ref));
+      //       this.getDeps(path, dependencies[i].dependsOn, mapDependencies, mapNames);
+      //     }
+      //   })
+      // },
 
-      // Recursively loop through project dependencies and add them to the tree
-     getDeps: function (path, dependencies, mapDependencies, mapNames) {
-        // Global var not working correctly ???
-        // Base case: no dependencies for this component
-        if(dependencies.length == 0){
-          this.tree.push(path);
-          return;
-        }
+      // Recursively loop through project dependencies and add them to the tree  (NOTE: STILL IN DEVELOPMENT)
+      // getDeps: function (path, dependencies, mapDependencies, mapNames) {
+      //   // Global var not working correctly ???
+      //   // Base case: no dependencies for this component
+      //   if(dependencies.length == 0){
+      //     this.tree.push(path);
+      //     return;
+      //   }
 
-        // Recursive case: component has dependencies (loop through each dep)
-        for(let i = 0; i < dependencies.length; i++){
-          // Create a new branch/path off the existing one
-          let nextPath = path.slice();
-          nextPath.push(" --> ")
-          nextPath.push(mapNames.get(dependencies[i]));
+      //   // Recursive case: component has dependencies (loop through each dep)
+      //   for(let i = 0; i < dependencies.length; i++){
+      //     // Create a new branch/path off the existing one
+      //     let nextPath = path.slice();
+      //     nextPath.push(" --> ")
+      //     nextPath.push(mapNames.get(dependencies[i]));
 
-          // Get dependencies of this dependency
-          this.getDeps(nextPath, mapDependencies.get(dependencies[i]), mapDependencies, mapNames);
-        }
-      },
+      //     // Get dependencies of this dependency
+      //     this.getDeps(nextPath, mapDependencies.get(dependencies[i]), mapDependencies, mapNames);
+      //   }
+      // },
 
       // Create a new excel workbook
       createExcelBook: function() {

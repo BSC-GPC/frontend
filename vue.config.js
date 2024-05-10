@@ -12,8 +12,8 @@ module.exports = {
       '/api': {
         target: "http://localhost:8080"
       },
-      '/kev': { // For nginx proxy
-        target: "http://localhost:80",
+      '/kev': { // For reverse proxy
+        target: "http://localhost:3000",
       }
     }
   },
