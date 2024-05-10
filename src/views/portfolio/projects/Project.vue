@@ -238,7 +238,7 @@
         <project-policy-violations :key="this.uuid" :uuid="this.uuid" v-on:total="totalViolations = $event" />
       </b-tab>
       <b-tab ref="excelreports" v-if="isPermitted(PERMISSIONS.VIEW_VULNERABILITY)" @click="routeTo('excelReports')">
-        <template v-slot:title><i class="fa fa-fire"></i> {{ $t('message.excel_reports') }}</template>
+        <template v-slot:title><i class="fa fa-file"></i> {{ $t('message.excel_reports') }}</template>
         <project-excel-reports :key="this.uuid" :uuid="this.uuid" :project="this.project"/>
       </b-tab>
     </b-tabs>
