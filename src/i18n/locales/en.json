@@ -459,6 +459,7 @@
     "data": "Data",
     "dates": "Dates",
     "delete": "Delete",
+    "delete_confirmation": "Delete Confirmation",
     "delete_license_group": "Delete License Group",
     "delete_policy": "Delete Policy",
     "dependency_graph": "Dependency Graph",

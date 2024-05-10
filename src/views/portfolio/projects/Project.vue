@@ -258,6 +258,8 @@
         <project-findings
           :key="this.uuid"
           :uuid="this.uuid"
+          :name="project.name"
+          :version="project.version" 
           v-on:total="totalFindingsIncludingAliases = $event"
         />
       </b-tab>
@@ -322,6 +324,7 @@
     />
     <project-properties-modal :uuid="this.uuid" />
     <project-create-property-modal :uuid="this.uuid" />
+    <project-delete-modal :uuid="this.uuid" />
     <project-add-version-modal :uuid="this.uuid" />
   </div>
 </template>

@@ -394,15 +394,15 @@ export default {
           const url = window.URL.createObjectURL(new Blob([response.data]));
           const link = document.createElement('a');
           link.href = url;
-          let filename = 'bom.json';
-          let disposition = response.headers['content-disposition'];
-          if (disposition && disposition.indexOf('attachment') !== -1) {
-            let filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-            let matches = filenameRegex.exec(disposition);
-            if (matches != null && matches[1]) {
-              filename = matches[1].replace(/['"]/g, '');
-            }
-          }
+          let filename = this.project.name + "-" + this.project.version + "-bom.json";
+          // let disposition = response.headers["content-disposition"]
+          // if (disposition && disposition.indexOf('attachment') !== -1) {
+          //   let filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+          //   let matches = filenameRegex.exec(disposition);
+          //   if (matches != null && matches[1]) {
+          //     filename = matches[1].replace(/['"]/g, '');
+          //   }
+          // }
           link.setAttribute('download', filename);
           document.body.appendChild(link);
           link.click();
