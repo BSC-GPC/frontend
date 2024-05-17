@@ -276,6 +276,9 @@ export default {
             }
           }
           return false;
+        }).catch(error => {
+          console.log("Vulnerability not found");
+          return false;
         });
       },
 
