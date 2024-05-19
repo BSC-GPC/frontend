@@ -222,97 +222,24 @@
         />
       </b-tab>
       <b-tab ref="dependencygraph" @click="routeTo('dependencyGraph')">
-        <template v-slot:title
-          ><i class="fa fa-sitemap"></i> {{ $t('message.dependency_graph') }}
-          <b-badge variant="tab-total">{{
-            totalDependencyGraphs
-          }}</b-badge></template
-        >
-        <project-dependency-graph
-          :key="this.uuid"
-          :uuid="this.uuid"
-          :project="this.project"
-          v-on:total="totalDependencyGraphs = $event"
-        />
+        <template v-slot:title><i class="fa fa-sitemap"></i> {{ $t('message.dependency_graph') }} <b-badge variant="tab-total">{{ totalDependencyGraphs }}</b-badge></template>
+        <project-dependency-graph :key="this.uuid" :uuid="this.uuid" :project="this.project" v-on:total="totalDependencyGraphs = $event" />
       </b-tab>
-      <b-tab
-        ref="findings"
-        v-if="isPermitted(PERMISSIONS.VIEW_VULNERABILITY)"
-        @click="routeTo('findings')"
-      >
-        <template v-slot:title>
-          <i class="fa fa-tasks"></i> {{ $t('message.audit_vulnerabilities') }}
-          <b-badge
-            variant="tab-total"
-            v-b-tooltip.hover
-            :title="$t('message.total_findings_excluding_aliases')"
-            >{{ totalFindings }}</b-badge
-          >
-          <b-badge
-            variant="tab-info"
-            v-b-tooltip.hover
-            :title="$t('message.total_findings_including_aliases')"
-            >{{ totalFindingsIncludingAliases }}</b-badge
-          >
-        </template>
-        <project-findings
-          :key="this.uuid"
-          :uuid="this.uuid"
-          v-on:total="totalFindingsIncludingAliases = $event"
-        />
+      <b-tab ref="findings" v-if="isPermitted(PERMISSIONS.VIEW_VULNERABILITY)" @click="routeTo('findings')">
+        <template v-slot:title><i class="fa fa-tasks"></i> {{ $t('message.audit_vulnerabilities') }} <b-badge variant="tab-total">{{ totalFindings }}</b-badge></template>
+        <project-findings :key="this.uuid" :uuid="this.uuid" :project="this.project" v-on:total="totalFindings = $event" />
       </b-tab>
-      <b-tab
-        ref="epss"
-        v-if="isPermitted(PERMISSIONS.VIEW_VULNERABILITY)"
-        @click="routeTo('epss')"
-      >
-        <template v-slot:title
-          ><i class="fa fa-tasks"></i> {{ $t('message.exploit_predictions') }}
-          <b-badge variant="tab-total">{{ totalEpss }}</b-badge></template
-        >
-        <project-epss
-          :key="this.uuid"
-          :uuid="this.uuid"
-          v-on:total="totalEpss = $event"
-        />
+      <b-tab ref="epss" v-if="isPermitted(PERMISSIONS.VIEW_VULNERABILITY)" @click="routeTo('epss')">
+        <template v-slot:title><i class="fa fa-tasks"></i> {{ $t('message.exploit_predictions') }} <b-badge variant="tab-total">{{ totalEpss }}</b-badge></template>
+        <project-epss :key="this.uuid" :uuid="this.uuid" v-on:total="totalEpss = $event" />
       </b-tab>
-      <b-tab
-        ref="policyviolations"
-        v-if="isPermitted(PERMISSIONS.VIEW_POLICY_VIOLATION)"
-        @click="routeTo('policyViolations')"
-      >
-        <template v-slot:title
-          ><i class="fa fa-fire"></i> {{ $t('message.policy_violations') }}
-          <b-badge
-            variant="tab-total"
-            v-b-tooltip.hover
-            :title="$t('policy_violation.total')"
-            >{{ totalViolations }}</b-badge
-          >
-          <b-badge
-            variant="tab-info"
-            v-b-tooltip.hover
-            :title="$t('policy_violation.infos')"
-            >{{ infoViolations }}</b-badge
-          >
-          <b-badge
-            variant="tab-warn"
-            v-b-tooltip.hover
-            :title="$t('policy_violation.warns')"
-            >{{ warnViolations }}</b-badge
-          >
-          <b-badge
-            variant="tab-fail"
-            v-b-tooltip.hover
-            :title="$t('policy_violation.fails')"
-            >{{ failViolations }}</b-badge
-          >
-        </template>
-        <project-policy-violations
-          :key="this.uuid"
-          :uuid="this.uuid"
-          v-on:total="totalViolations = $event"
-        />
+      <b-tab ref="policyviolations" v-if="isPermitted(PERMISSIONS.VIEW_POLICY_VIOLATION)" @click="routeTo('policyViolations')">
+        <template v-slot:title><i class="fa fa-fire"></i> {{ $t('message.policy_violations') }} <b-badge variant="tab-total">{{ totalViolations }}</b-badge></template>
+        <project-policy-violations :key="this.uuid" :uuid="this.uuid" v-on:total="totalViolations = $event" />
+      </b-tab>
+      <b-tab ref="excelreports" v-if="isPermitted(PERMISSIONS.VIEW_VULNERABILITY)" @click="routeTo('excelReports')">
+        <template v-slot:title><i class="fa fa-file"></i> {{ $t('message.excel_reports') }}</template>
+        <project-excel-reports :key="this.uuid" :uuid="this.uuid" :project="this.project"/>
       </b-tab>
     </b-tabs>
     <project-details-modal
@@ -322,217 +249,222 @@
     />
     <project-properties-modal :uuid="this.uuid" />
     <project-create-property-modal :uuid="this.uuid" />
+    <project-delete-modal :uuid="this.uuid" />
     <project-add-version-modal :uuid="this.uuid" />
   </div>
 </template>
 
 <script>
-import common from '../../../shared/common';
-import { cloneDeep } from 'lodash-es';
-import { getStyle } from '@coreui/coreui/dist/js/coreui-utilities';
-import VueEasyPieChart from 'vue-easy-pie-chart';
-import ProjectComponents from './ProjectComponents';
-import ProjectDependencyGraph from './ProjectDependencyGraph';
-import ProjectServices from './ProjectServices';
-import PortfolioWidgetRow from '../../dashboard/PortfolioWidgetRow';
-import ProjectDashboard from './ProjectDashboard';
-import SeverityBarChart from '../../dashboard/SeverityBarChart';
-import EventBus from '../../../shared/eventbus';
-import permissionsMixin from '../../../mixins/permissionsMixin';
-import ProjectDetailsModal from './ProjectDetailsModal';
-import ProjectPropertiesModal from './ProjectPropertiesModal';
-import ProjectCreatePropertyModal from './ProjectCreatePropertyModal';
-import ProjectAddVersionModal from './ProjectAddVersionModal';
-import ProjectFindings from './ProjectFindings';
-import ProjectPolicyViolations from './ProjectPolicyViolations';
-import ProjectEpss from './ProjectEpss';
-import ExternalReferencesDropdown from '../../components/ExternalReferencesDropdown.vue';
+  import common from "../../../shared/common"
+  import { cloneDeep } from 'lodash-es';
+  import { getStyle } from '@coreui/coreui/dist/js/coreui-utilities'
+  import VueEasyPieChart from 'vue-easy-pie-chart'
+  import ProjectComponents from "./ProjectComponents";
+  import ProjectDependencyGraph from "./ProjectDependencyGraph";
+  import ProjectServices from "./ProjectServices";
+  import PortfolioWidgetRow from "../../dashboard/PortfolioWidgetRow";
+  import ProjectDashboard from "./ProjectDashboard";
+  import SeverityBarChart from "../../dashboard/SeverityBarChart";
+  import EventBus from '../../../shared/eventbus';
+  import permissionsMixin from "../../../mixins/permissionsMixin";
+  import ProjectDetailsModal from "./ProjectDetailsModal";
+  import ProjectPropertiesModal from "./ProjectPropertiesModal";
+  import ProjectCreatePropertyModal from "./ProjectCreatePropertyModal";
+  import ProjectDeleteModal from "./ProjectDeleteModal";
+  import ProjectAddVersionModal from "./ProjectAddVersionModal";
+  import ProjectFindings from "./ProjectFindings";
+  import ProjectPolicyViolations from "./ProjectPolicyViolations";
+  import ProjectEpss from "./ProjectEpss";
+  import ProjectExcelReports from "./ProjectExcelReports";
+  import ExternalReferencesDropdown from "../../components/ExternalReferencesDropdown.vue";
 
-export default {
-  mixins: [permissionsMixin],
-  components: {
-    ProjectPolicyViolations,
-    ProjectFindings,
-    ProjectAddVersionModal,
-    ProjectCreatePropertyModal,
-    ProjectPropertiesModal,
-    ProjectDetailsModal,
-    ProjectComponents,
-    ProjectDependencyGraph,
-    ProjectServices,
-    SeverityBarChart,
-    ProjectDashboard,
-    PortfolioWidgetRow,
-    VueEasyPieChart,
-    ProjectEpss,
-    ExternalReferencesDropdown,
-  },
-  title: '',
-  computed: {
-    projectLabel() {
-      if (this.project.name && this.project.version) {
-        return this.project.name + ' ▸ ' + this.project.version;
-      } else {
-        return this.project.name;
-      }
+  export default {
+    mixins: [permissionsMixin],
+    components: {
+      ProjectPolicyViolations,
+      ProjectFindings,
+      ProjectExcelReports,
+      ProjectAddVersionModal,
+      ProjectCreatePropertyModal,
+      ProjectPropertiesModal,
+      ProjectDeleteModal,
+      ProjectDetailsModal,
+      ProjectComponents,
+      ProjectDependencyGraph,
+      ProjectServices,
+      SeverityBarChart,
+      ProjectDashboard,
+      PortfolioWidgetRow,
+      VueEasyPieChart,
+      ProjectEpss,
+      ExternalReferencesDropdown
     },
-  },
-  data() {
-    return {
-      severityCritical: this.getStyle('--severity-critical'),
-      severityHigh: this.getStyle('--severity-high'),
-      severityMedium: this.getStyle('--severity-medium'),
-      severityLow: this.getStyle('--severity-low'),
-      severityUnassigned: this.getStyle('--severity-unassigned'),
-      severityInfo: this.getStyle('--severity-info'),
-      trackColor: this.getStyle('--component-active-color'),
-      uuid: null,
-      project: {},
-      currentCritical: 0,
-      currentHigh: 0,
-      currentMedium: 0,
-      currentLow: 0,
-      currentUnassigned: 0,
-      currentRiskScore: 0,
-      totalComponents: 0,
-      totalServices: 0,
-      totalDependencyGraphs: 0,
-      totalFindings: 0,
-      totalFindingsIncludingAliases: 0,
-      totalEpss: 0,
-      totalViolations: 0,
-      infoViolations: 0,
-      warnViolations: 0,
-      failViolations: 0,
-      tabIndex: 0,
-    };
-  },
-  methods: {
-    cloneDeep: function (component) {
-      return cloneDeep(component);
-    },
-    getStyle: function (style) {
-      return getStyle(style);
-    },
-    syncProjectFields: function (project) {
-      this.project = project;
-      EventBus.$emit('addCrumb', this.projectLabel);
-      this.$title = this.projectLabel;
-    },
-    initialize: function () {
-      let projectUrl = `${this.$api.BASE_URL}/${this.$api.URL_PROJECT}/${this.uuid}`;
-      this.axios
-        .get(projectUrl)
-        .catch((error) => {
-          if (error.response.status === 403) {
-            this.$router.replace({ name: 'Projects' });
-          }
-        })
-        .then((response) => {
-          this.project = response.data;
-          this.currentCritical = common.valueWithDefault(
-            this.project.metrics.critical,
-            0,
-          );
-          this.currentHigh = common.valueWithDefault(
-            this.project.metrics.high,
-            0,
-          );
-          this.currentMedium = common.valueWithDefault(
-            this.project.metrics.medium,
-            0,
-          );
-          this.currentLow = common.valueWithDefault(
-            this.project.metrics.low,
-            0,
-          );
-          this.currentUnassigned = common.valueWithDefault(
-            this.project.metrics.unassigned,
-            0,
-          );
-          this.currentRiskScore = common.valueWithDefault(
-            this.project.metrics.inheritedRiskScore,
-            0,
-          );
-          this.totalFindings = common.valueWithDefault(
-            this.project.metrics.findingsTotal,
-            0,
-          );
-          this.infoViolations = common.valueWithDefault(
-            this.project.metrics.policyViolationsInfo,
-            0,
-          );
-          this.warnViolations = common.valueWithDefault(
-            this.project.metrics.policyViolationsWarn,
-            0,
-          );
-          this.failViolations = common.valueWithDefault(
-            this.project.metrics.policyViolationsFail,
-            0,
-          );
-          EventBus.$emit('addCrumb', this.projectLabel);
-          this.$title = this.projectLabel;
-        });
-    },
-    initializeProjectDetailsModal: function () {
-      this.$root.$emit('initializeProjectDetailsModal');
-    },
-    routeTo(path) {
-      if (path) {
-        if (
-          !this.$route.fullPath.toLowerCase().includes('/' + path.toLowerCase())
-        ) {
-          this.$router.push({ path: '/projects/' + this.uuid + '/' + path });
+    title: '',
+    computed: {
+      projectLabel () {
+        if (this.project.name && this.project.version) {
+          return this.project.name + ' ▸ ' + this.project.version;
+        } else {
+          return this.project.name;
         }
-      } else if (
-        this.$route.fullPath !== '/projects/' + this.uuid &&
-        this.$route.fullPath !== '/projects/' + this.uuid + '/'
-      ) {
-        this.$router.push({ path: '/projects/' + this.uuid });
       }
     },
-    getTabFromRoute: function () {
-      let pattern = new RegExp(
-        '/projects\\/' + this.uuid + '\\/([^\\/]*)',
-        'gi',
-      );
-      let tab = pattern.exec(this.$route.fullPath.toLowerCase());
-      return this.$refs[tab && tab[1] ? tab[1].toLowerCase() : 'overview'];
+    data() {
+      return {
+        severityCritical: this.getStyle('--severity-critical'),
+        severityHigh: this.getStyle('--severity-high'),
+        severityMedium: this.getStyle('--severity-medium'),
+        severityLow: this.getStyle('--severity-low'),
+        severityUnassigned: this.getStyle('--severity-unassigned'),
+        severityInfo: this.getStyle('--severity-info'),
+        trackColor: this.getStyle('--component-active-color'),
+        uuid: null,
+        project: {},
+        currentCritical: 0,
+        currentHigh: 0,
+        currentMedium: 0,
+        currentLow: 0,
+        currentUnassigned: 0,
+        currentRiskScore: 0,
+        totalComponents: 0,
+        totalServices: 0,
+        totalDependencyGraphs: 0,
+        totalFindings: 0,
+        totalFindingsIncludingAliases: 0,
+        totalEpss: 0,
+        totalViolations: 0,
+        infoViolations: 0,
+        warnViolations: 0,
+        failViolations: 0,
+        tabIndex: 0,
+      };
     },
-  },
-  beforeMount() {
-    this.uuid = this.$route.params.uuid;
-    this.initialize();
-  },
-  mounted() {
-    try {
-      if (this.$route.params.componentUuids) {
-        this.$refs.dependencygraph.active = true;
-      } else {
-        this.getTabFromRoute().active = true;
-      }
-    } catch (e) {
-      this.$toastr.e(this.$t('condition.forbidden'));
-      this.$router.replace({ path: '/projects/' + this.uuid });
-      this.$refs.overview.active = true;
-    }
-  },
-  watch: {
-    $route(to, from) {
+    methods: {
+      cloneDeep: function (component) {
+        return cloneDeep(component);
+      },
+      getStyle: function (style) {
+        return getStyle(style);
+      },
+      syncProjectFields: function (project) {
+        this.project = project;
+        EventBus.$emit('addCrumb', this.projectLabel);
+        this.$title = this.projectLabel;
+      },
+      initialize: function () {
+        let projectUrl = `${this.$api.BASE_URL}/${this.$api.URL_PROJECT}/${this.uuid}`;
+        this.axios
+          .get(projectUrl)
+          .catch((error) => {
+            if (error.response.status === 403) {
+              this.$router.replace({ name: 'Projects' });
+            }
+          })
+          .then((response) => {
+            this.project = response.data;
+            this.currentCritical = common.valueWithDefault(
+              this.project.metrics.critical,
+              0,
+            );
+            this.currentHigh = common.valueWithDefault(
+              this.project.metrics.high,
+              0,
+            );
+            this.currentMedium = common.valueWithDefault(
+              this.project.metrics.medium,
+              0,
+            );
+            this.currentLow = common.valueWithDefault(
+              this.project.metrics.low,
+              0,
+            );
+            this.currentUnassigned = common.valueWithDefault(
+              this.project.metrics.unassigned,
+              0,
+            );
+            this.currentRiskScore = common.valueWithDefault(
+              this.project.metrics.inheritedRiskScore,
+              0,
+            );
+            this.totalFindings = common.valueWithDefault(
+              this.project.metrics.findingsTotal,
+              0,
+            );
+            this.infoViolations = common.valueWithDefault(
+              this.project.metrics.policyViolationsInfo,
+              0,
+            );
+            this.warnViolations = common.valueWithDefault(
+              this.project.metrics.policyViolationsWarn,
+              0,
+            );
+            this.failViolations = common.valueWithDefault(
+              this.project.metrics.policyViolationsFail,
+              0,
+            );
+            EventBus.$emit('addCrumb', this.projectLabel);
+            this.$title = this.projectLabel;
+          });
+      },
+      initializeProjectDetailsModal: function () {
+        this.$root.$emit('initializeProjectDetailsModal');
+      },
+      routeTo(path) {
+        if (path) {
+          if (
+            !this.$route.fullPath.toLowerCase().includes('/' + path.toLowerCase())
+          ) {
+            this.$router.push({ path: '/projects/' + this.uuid + '/' + path });
+          }
+        } else if (
+          this.$route.fullPath !== '/projects/' + this.uuid &&
+          this.$route.fullPath !== '/projects/' + this.uuid + '/'
+        ) {
+          this.$router.push({ path: '/projects/' + this.uuid });
+        }
+      },
+      getTabFromRoute: function () {
+        let pattern = new RegExp(
+          '/projects\\/' + this.uuid + '\\/([^\\/]*)',
+          'gi',
+        );
+        let tab = pattern.exec(this.$route.fullPath.toLowerCase());
+        return this.$refs[tab && tab[1] ? tab[1].toLowerCase() : 'overview'];
+      },
+    },
+    beforeMount() {
       this.uuid = this.$route.params.uuid;
-      if (to.params.uuid !== from.params.uuid) {
-        this.initialize();
-      } else if (this.$route.params.componentUuids) {
-        this.initialize();
-        this.$refs.dependencygraph.activate();
-      }
-      this.getTabFromRoute().activate();
+      this.initialize();
     },
-  },
-  destroyed() {
-    EventBus.$emit('crumble');
-  },
-};
+    mounted() {
+      try {
+        if (this.$route.params.componentUuids) {
+          this.$refs.dependencygraph.active = true;
+        } else {
+          this.getTabFromRoute().active = true;
+        }
+      } catch (e) {
+        this.$toastr.e(this.$t('condition.forbidden'));
+        this.$router.replace({ path: '/projects/' + this.uuid });
+        this.$refs.overview.active = true;
+      }
+    },
+    watch: {
+      $route(to, from) {
+        this.uuid = this.$route.params.uuid;
+        if (to.params.uuid !== from.params.uuid) {
+          this.initialize();
+        } else if (this.$route.params.componentUuids) {
+          this.initialize();
+          this.$refs.dependencygraph.activate();
+        }
+        this.getTabFromRoute().activate();
+      },
+    },
+    destroyed() {
+      EventBus.$emit('crumble');
+    },
+  };
 </script>
 
 <style scoped>

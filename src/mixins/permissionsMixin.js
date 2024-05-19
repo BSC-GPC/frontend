@@ -6,6 +6,7 @@ export default {
       PERMISSIONS: {
         BOM_UPLOAD: permissions.BOM_UPLOAD,
         VIEW_PORTFOLIO: permissions.VIEW_PORTFOLIO,
+        TEAM_ADMIN: permissions.TEAM_ADMIN,
         PORTFOLIO_MANAGEMENT: permissions.PORTFOLIO_MANAGEMENT,
         ACCESS_MANAGEMENT: permissions.ACCESS_MANAGEMENT,
         VIEW_VULNERABILITY: permissions.VIEW_VULNERABILITY,

@@ -120,6 +120,7 @@ import ProjectUploadVexModal from './ProjectUploadVexModal';
 export default {
   props: {
     uuid: String,
+    project: Object,
   },
   mixins: [bootstrapTableMixin, permissionsMixin],
   components: {
@@ -452,15 +453,7 @@ export default {
           const url = window.URL.createObjectURL(new Blob([response.data]));
           const link = document.createElement('a');
           link.href = url;
-          let filename = 'vex.json';
-          let disposition = response.headers['content-disposition'];
-          if (disposition && disposition.indexOf('attachment') !== -1) {
-            let filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-            let matches = filenameRegex.exec(disposition);
-            if (matches != null && matches[1]) {
-              filename = matches[1].replace(/['"]/g, '');
-            }
-          }
+          let filename = this.project.name + "-" + (this.project.version || "") + "-vex.json";
           link.setAttribute('download', filename);
           document.body.appendChild(link);
           link.click();
@@ -483,15 +476,7 @@ export default {
           const url = window.URL.createObjectURL(new Blob([response.data]));
           const link = document.createElement('a');
           link.href = url;
-          let filename = 'bom.json';
-          let disposition = response.headers['content-disposition'];
-          if (disposition && disposition.indexOf('attachment') !== -1) {
-            let filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-            let matches = filenameRegex.exec(disposition);
-            if (matches != null && matches[1]) {
-              filename = matches[1].replace(/['"]/g, '');
-            }
-          }
+          let filename = this.project.name + "-" + (this.project.version || "") + "-vdr.json";
           link.setAttribute('download', filename);
           document.body.appendChild(link);
           link.click();
