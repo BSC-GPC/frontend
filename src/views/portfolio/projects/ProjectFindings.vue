@@ -120,6 +120,7 @@ import ProjectUploadVexModal from './ProjectUploadVexModal';
 export default {
   props: {
     uuid: String,
+    project: Object,
   },
   mixins: [bootstrapTableMixin, permissionsMixin],
   components: {
@@ -452,7 +453,7 @@ export default {
           const url = window.URL.createObjectURL(new Blob([response.data]));
           const link = document.createElement('a');
           link.href = url;
-          let filename = this.name + "-" + (this.version || "") + "-vex.json";
+          let filename = this.project.name + "-" + (this.project.version || "") + "-vex.json";
           link.setAttribute('download', filename);
           document.body.appendChild(link);
           link.click();
@@ -475,7 +476,7 @@ export default {
           const url = window.URL.createObjectURL(new Blob([response.data]));
           const link = document.createElement('a');
           link.href = url;
-          let filename = this.name + "-" + (this.version || "") + "-vdr.json";
+          let filename = this.project.name + "-" + (this.project.version || "") + "-vdr.json";
           link.setAttribute('download', filename);
           document.body.appendChild(link);
           link.click();

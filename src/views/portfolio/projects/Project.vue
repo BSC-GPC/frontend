@@ -227,7 +227,7 @@
       </b-tab>
       <b-tab ref="findings" v-if="isPermitted(PERMISSIONS.VIEW_VULNERABILITY)" @click="routeTo('findings')">
         <template v-slot:title><i class="fa fa-tasks"></i> {{ $t('message.audit_vulnerabilities') }} <b-badge variant="tab-total">{{ totalFindings }}</b-badge></template>
-        <project-findings :key="this.uuid" :uuid="this.uuid" :name="project.name" :version="project.version" v-on:total="totalFindings = $event" />
+        <project-findings :key="this.uuid" :uuid="this.uuid" :project="this.project" v-on:total="totalFindings = $event" />
       </b-tab>
       <b-tab ref="epss" v-if="isPermitted(PERMISSIONS.VIEW_VULNERABILITY)" @click="routeTo('epss')">
         <template v-slot:title><i class="fa fa-tasks"></i> {{ $t('message.exploit_predictions') }} <b-badge variant="tab-total">{{ totalEpss }}</b-badge></template>
