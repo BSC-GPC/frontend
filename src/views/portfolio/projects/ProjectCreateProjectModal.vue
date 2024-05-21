@@ -46,6 +46,17 @@
             :label="$t('message.classifier')"
             :tooltip="$t('message.component_classifier_desc')"
           />
+            <bootstrap-table
+              ref="table"
+              :columns="columns"
+              :data="data"
+              :options="options"
+            >
+            </bootstrap-table>
+          <b-button id="download-sbom-button" size="md" variant="outline-primary"
+            @click="getUserTeams()">          
+            <span class="fa fa-download"></span> {{ $t('message.download_sbom') }}
+        </b-button>
           <div style="margin-bottom: 1rem">
             <label>Parent</label>
             <multiselect
@@ -200,6 +211,8 @@ import VueTagsInput from '@johmun/vue-tags-input';
 import { Switch as cSwitch } from '@coreui/vue';
 import permissionsMixin from '../../../mixins/permissionsMixin';
 import Multiselect from 'vue-multiselect';
+import $ from 'jquery';
+
 
 export default {
   name: 'ProjectCreateProjectModal',
@@ -213,6 +226,28 @@ export default {
   },
   data() {
     return {
+      // data: [{name: "team1"}, {name: "team2"}],
+      data: this.getUserTeams(),
+      columns: [
+        {
+          field: 'state',
+          checkbox: true,
+          align: 'center',
+        },
+        {
+          title: this.$t('message.name'),
+          field: 'name',
+          sortable: true,
+        },
+      ],
+      options: {
+        showColumns: true,
+        // responseHandler: function (res, xhr) {
+        //   res.total = xhr.getResponseHeader('X-Total-Count');
+        //   return res;
+        // },
+        // url: this.getUserTeams(),
+      },
       readOnlyProjectName: '',
       readOnlyProjectVersion: '',
       availableClassifiers: [
@@ -317,6 +352,30 @@ export default {
         .finally(() => {
           this.$root.$emit('bv::hide::modal', 'projectCreateProjectModal');
         });
+    },
+    getUserTeams: function () {
+      let url =`${this.$api.BASE_URL}/${this.$api.URL_USER_SELF}`;
+      return this.axios.request({
+        url: url,
+        method: 'get'
+      }).then((response) => {
+        console.log(response.data.teams);
+        return response.data.teams;
+      });
+    },
+    addACLMapping: function (teamUUID, projectUUID) {
+      let url =`${this.$api.BASE_URL}/${this.$api.URL_ACL_MAPPING}`;
+      return this.axios.request({
+        url: url,
+        method: 'put',
+        headers: {"Content-type": "application/json"},
+        body: {
+          "team": teamUUID,
+          "project": projectUUID
+      }
+      }).then((response) => {
+        console.log(response);
+      });
     },
     retrieveLicenses: function () {
       return new Promise((resolve) => {
